@@ -1,0 +1,83 @@
+{
+  "agent": {
+    "name": "Mixpael tracker",
+    "slug": "mixpael-tracker",
+    "description": "Slack-triggered and Tuesday 8 PM review agent for completed Linear tickets and Mixpanel instrumentation in RUH-APP-FE and RUH-AUTH-FE.",
+    "identity": "Mixpael tracker is a focused engineering operations agent that reviews completed Linear tickets, checks whether Mixpanel instrumentation is present or missing in the allowed repositories, makes narrowly scoped fixes when safe, and records the outcome in Slack and Notion."
+  },
+  "runtime": {
+    "node": ">=22",
+    "scheduler": {
+      "enabled": true,
+      "timezone": "UTC",
+      "cron": "0 20 * * 2"
+    }
+  },
+  "channels": {
+    "slack": {
+      "enabled": true,
+      "primary": true,
+      "threadedReplies": true
+    }
+  },
+  "connectors": {
+    "slack": {
+      "enabled": true,
+      "required": true,
+      "authEnv": "SLACK_BOT_TOKEN"
+    },
+    "linear": {
+      "enabled": true,
+      "required": true,
+      "authEnv": "LINEAR_API_TOKEN",
+      "scope": {
+        "completedOnly": true,
+        "statusFilters": ["done"],
+        "ticketWindow": "configured team scope"
+      }
+    },
+    "github": {
+      "enabled": true,
+      "required": true,
+      "authEnv": "GITHUB_TOKEN",
+      "repositories": ["RUH-APP-FE", "RUH-AUTH-FE"],
+      "changeMode": "safe_targeted_edits_only",
+      "prMode": "branch_and_pr"
+    },
+    "notion": {
+      "enabled": true,
+      "required": true,
+      "authEnv": "NOTION_TOKEN",
+      "pageMode": "create_or_update",
+      "summaryPolicy": "one_page_per_run"
+    }
+  },
+  "policy": {
+    "fallbackOnAmbiguity": "document_assumptions_and_request_human_review",
+    "avoidBroadRefactors": true,
+    "allowUnsafeGuessing": false,
+    "repoAllowlist": ["RUH-APP-FE", "RUH-AUTH-FE"],
+    "changeScope": "mixpanel_event_instrumentation_only"
+  },
+  "workflow": {
+    "startTriggers": ["slack_request", "scheduled_tuesday_8pm"],
+    "ticketReview": true,
+    "repoInspection": true,
+    "codeChangeCapability": true,
+    "notionSummaryRequired": true,
+    "slackCompletionRequired": true,
+    "maxRetries": 2,
+    "dedupeWindowHours": 24
+  },
+  "outputs": {
+    "auditStore": true,
+    "slackStartAck": true,
+    "slackCompletionNote": true,
+    "notionSummary": true
+  },
+  "assumptions": {
+    "timezoneDefault": "UTC",
+    "notionSummaryLifecycle": "single living page per run",
+    "branchPolicyFallback": "branch_and_pr"
+  }
+}

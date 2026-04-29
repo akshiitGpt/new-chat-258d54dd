@@ -1,0 +1,7 @@
+{
+  "timezone": "UTC",
+  "schedule": "Tuesday 8:00 PM",
+  "scope": "completed Linear tickets in configured team scope",
+  "repositories": ["RUH-APP-FE", "RUH-AUTH-FE"],
+  "notionPolicy": "one living summary page per run"
+}
